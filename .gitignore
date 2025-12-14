@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# Lambda deployment packages
+*.zip
+*-fixed.zip
+*-final.zip
+
+# AWS credentials and config
+.aws/
+config.json
+*.pem
+*.key
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+nul
+*.tmp
+*.log
+
+# Node modules (if any)
+node_modules/
+
+# Environment variables
+.env
+.env.local
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
