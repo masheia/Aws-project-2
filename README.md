@@ -229,22 +229,41 @@ Traditional attendance systems face several challenges:
 4. Face detected and indexed in Rekognition Face Collection
 5. Student metadata (ID, name, face details) saved to DynamoDB `Students` table
 
-#### Attendance Marking Flow:
-1. User uploads attendance photo via web interface
-2. Image sent to API Gateway → Lambda (`ProcessAttendance`)
-3. Image stored in S3 bucket
-4. Rekognition searches Face Collection for matches
-5. For each match found:
-   - Student identified with confidence score
-   - Attendance record created in DynamoDB `AttendanceRecords` table
-   - Notification sent via SNS (optional)
+#### Attendance Marking Flow (Student Web Interface):
+1. Student logs in to web interface
+2. Student uploads their photo via web interface
+3. Image sent to API Gateway → Lambda (`ProcessAttendance`)
+4. Image stored in S3 bucket
+5. Rekognition searches Face Collection to verify student identity
+6. System matches face to logged-in student
+7. Attendance record created in DynamoDB `AttendanceRecords` table
+8. Notification sent via SNS (optional)
+9. Student sees confirmation in web interface
 
-#### Attendance Retrieval Flow:
-1. User requests attendance records via web interface
+#### Attendance Retrieval Flow (Student Web Interface):
+1. Student requests attendance records via web interface
 2. Request sent to API Gateway → Lambda (`GetAttendance`)
-3. Lambda queries DynamoDB based on filters (date, student ID, class)
+3. Lambda queries DynamoDB filtered by logged-in student's ID
 4. Results returned to frontend
-5. Frontend displays attendance dashboard
+5. Frontend displays student's personal attendance dashboard
+
+#### Admin Management Flow (AWS Console):
+1. Admin logs in to AWS Console with IAM credentials
+2. Admin accesses DynamoDB Console to manage data:
+   - View all attendance records in `AttendanceRecords` table
+   - View all students in `Students` table
+   - Add/remove/update records directly
+3. Admin accesses CloudWatch Logs to monitor system:
+   - Review Lambda function logs
+   - Troubleshoot issues
+   - Monitor system performance
+4. Admin accesses Rekognition Console to manage faces:
+   - View face collection
+   - Re-register faces if needed
+5. Admin accesses S3 Console to manage images:
+   - View uploaded photos
+   - Delete old images
+   - Organize storage
 
 ---
 
