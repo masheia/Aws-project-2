@@ -1,0 +1,112 @@
+{
+  "Students": {
+    "TableName": "Students",
+    "KeySchema": [
+      {
+        "AttributeName": "FaceId",
+        "KeyType": "HASH"
+      }
+    ],
+    "AttributeDefinitions": [
+      {
+        "AttributeName": "FaceId",
+        "AttributeType": "S"
+      },
+      {
+        "AttributeName": "StudentId",
+        "AttributeType": "S"
+      }
+    ],
+    "GlobalSecondaryIndexes": [
+      {
+        "IndexName": "StudentId-index",
+        "KeySchema": [
+          {
+            "AttributeName": "StudentId",
+            "KeyType": "HASH"
+          }
+        ],
+        "Projection": {
+          "ProjectionType": "ALL"
+        },
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": 5,
+          "WriteCapacityUnits": 5
+        }
+      }
+    ],
+    "ProvisionedThroughput": {
+      "ReadCapacityUnits": 5,
+      "WriteCapacityUnits": 5
+    }
+  },
+  "AttendanceRecords": {
+    "TableName": "AttendanceRecords",
+    "KeySchema": [
+      {
+        "AttributeName": "AttendanceId",
+        "KeyType": "HASH"
+      }
+    ],
+    "AttributeDefinitions": [
+      {
+        "AttributeName": "AttendanceId",
+        "AttributeType": "S"
+      },
+      {
+        "AttributeName": "Date",
+        "AttributeType": "S"
+      },
+      {
+        "AttributeName": "StudentId",
+        "AttributeType": "S"
+      }
+    ],
+    "GlobalSecondaryIndexes": [
+      {
+        "IndexName": "Date-index",
+        "KeySchema": [
+          {
+            "AttributeName": "Date",
+            "KeyType": "HASH"
+          }
+        ],
+        "Projection": {
+          "ProjectionType": "ALL"
+        },
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": 5,
+          "WriteCapacityUnits": 5
+        }
+      },
+      {
+        "IndexName": "StudentId-Date-index",
+        "KeySchema": [
+          {
+            "AttributeName": "StudentId",
+            "KeyType": "HASH"
+          },
+          {
+            "AttributeName": "Date",
+            "KeyType": "RANGE"
+          }
+        ],
+        "Projection": {
+          "ProjectionType": "ALL"
+        },
+        "ProvisionedThroughput": {
+          "ReadCapacityUnits": 5,
+          "WriteCapacityUnits": 5
+        }
+      }
+    ],
+    "ProvisionedThroughput": {
+      "ReadCapacityUnits": 5,
+      "WriteCapacityUnits": 5
+    }
+  }
+}
+
+
+
+

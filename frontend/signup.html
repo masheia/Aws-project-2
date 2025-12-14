@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account - Face Recognition Attendance System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #20b2aa 0%, #008b8b 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .signup-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 500px;
+            padding: 40px;
+        }
+        
+        .signup-container h1 {
+            color: #333;
+            font-size: 2em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .signup-container p {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.95em;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+        
+        .form-group input[type="text"],
+        .form-group input[type="email"],
+        .form-group input[type="password"],
+        .form-group input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #20b2aa;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+        
+        .checkbox-group label {
+            color: #666;
+            font-weight: normal;
+            cursor: pointer;
+            margin: 0;
+        }
+        
+        .btn-signup {
+            width: 100%;
+            padding: 14px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-bottom: 20px;
+        }
+        
+        .btn-signup:hover {
+            background: #0056b3;
+        }
+        
+        .image-preview {
+            margin-top: 15px;
+            text-align: center;
+        }
+        
+        .image-preview img {
+            max-width: 250px;
+            max-height: 250px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border: 2px solid #e0e0e0;
+        }
+        
+        .result-message {
+            padding: 12px;
+            border-radius: 5px;
+            margin-top: 15px;
+            display: none;
+            text-align: center;
+        }
+        
+        .result-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .result-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .result-message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .links {
+            text-align: center;
+            font-size: 0.9em;
+            margin-top: 20px;
+        }
+        
+        .links a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        
+        .links a:hover {
+            text-decoration: underline;
+        }
+        
+        .upload-hint {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 5px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <h1>Create Account</h1>
+        <p>Sign up to start using the Face Recognition Attendance System</p>
+        
+        <form id="signupForm" onsubmit="signUp(); return false;">
+            <div class="form-group">
+                <label>Student ID:</label>
+                <input type="text" id="signupStudentId" placeholder="Enter Student ID" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Student Name:</label>
+                <input type="text" id="signupStudentName" placeholder="Enter your full name" required>
+            </div>
+            
+            <div class="form-group">
+                <label>Password:</label>
+                <input type="password" id="signupPassword" placeholder="Enter password" required>
+            </div>
+            
+            <div class="checkbox-group">
+                <input type="checkbox" id="showPasswordSignup" onchange="togglePasswordSignup()">
+                <label for="showPasswordSignup">Show Password</label>
+            </div>
+            
+            <div class="form-group">
+                <label>Upload Your Face Photo:</label>
+                <input type="file" id="signupImage" accept="image/*" onchange="previewSignupImage()" required>
+                <div class="upload-hint">Please upload a clear photo of your face for recognition</div>
+                <div class="image-preview">
+                    <img id="signupPreview" src="" alt="Preview" style="display: none;">
+                </div>
+            </div>
+            
+            <button type="submit" class="btn-signup">CREATE ACCOUNT</button>
+            
+            <div id="signupResult" class="result-message"></div>
+        </form>
+        
+        <div class="links">
+            <a href="login.html">Already have an account? Log in</a>
+        </div>
+    </div>
+
+    <script>
+        function togglePasswordSignup() {
+            const passwordInput = document.getElementById('signupPassword');
+            const checkbox = document.getElementById('showPasswordSignup');
+            if (passwordInput) {
+                passwordInput.type = checkbox.checked ? 'text' : 'password';
+            }
+        }
+
+        function previewSignupImage() {
+            const input = document.getElementById('signupImage');
+            const preview = document.getElementById('signupPreview');
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function getBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        async function signUp() {
+            const studentId = document.getElementById('signupStudentId').value.trim();
+            const studentName = document.getElementById('signupStudentName').value.trim();
+            const password = document.getElementById('signupPassword').value;
+            const imageFile = document.getElementById('signupImage').files[0];
+            const resultDiv = document.getElementById('signupResult');
+            
+            if (!studentId || !studentName || !password || !imageFile) {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result-message error';
+                resultDiv.textContent = 'Please fill all fields and upload your face photo';
+                return;
+            }
+            
+            if (password.length < 6) {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result-message error';
+                resultDiv.textContent = 'Password must be at least 6 characters long';
+                return;
+            }
+            
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result-message info';
+            resultDiv.textContent = 'Creating account and uploading face...';
+            
+            try {
+                const imageBase64 = await getBase64(imageFile);
+                const API_BASE_URL = 'https://pjjf6u13f8.execute-api.us-east-1.amazonaws.com/prod';
+                
+                // Register face
+                const response = await fetch(`${API_BASE_URL}/register-face`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        studentId: studentId,
+                        name: studentName,
+                        image: imageBase64
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Store user info (including password for future use)
+                    sessionStorage.setItem('userRole', 'student');
+                    sessionStorage.setItem('studentId', studentId);
+                    sessionStorage.setItem('userName', studentName);
+                    sessionStorage.setItem('userPassword', password); // Store for demo (in production, use proper auth)
+                    sessionStorage.setItem('isNewUser', 'true');
+                    
+                    resultDiv.className = 'result-message success';
+                    resultDiv.textContent = '✅ Account created successfully! Your face has been registered. Redirecting...';
+                    
+                    // Redirect after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 2000);
+                } else {
+                    resultDiv.className = 'result-message error';
+                    resultDiv.textContent = 'Error: ' + (data.error || 'Registration failed. Please try again.');
+                }
+            } catch (error) {
+                resultDiv.className = 'result-message error';
+                resultDiv.textContent = 'Error: ' + error.message + '. Please check your connection and try again.';
+            }
+        }
+
+        // Check if already logged in
+        if (sessionStorage.getItem('userRole')) {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
+

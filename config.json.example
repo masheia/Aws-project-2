@@ -1,0 +1,26 @@
+{
+  "aws": {
+    "region": "us-east-1",
+    "accountId": "",
+    "s3Bucket": "attendance-images-bucket",
+    "frontendBucket": "attendance-frontend-bucket",
+    "rekognitionCollectionId": "attendance-students",
+    "snsTopicName": "attendance-notifications"
+  },
+  "dynamodb": {
+    "studentsTable": "Students",
+    "attendanceTable": "AttendanceRecords"
+  },
+  "lambda": {
+    "runtime": "python3.11",
+    "timeout": 30,
+    "memory": 512
+  },
+  "apiGateway": {
+    "stageName": "prod"
+  }
+}
+
+
+
+

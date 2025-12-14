@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Face Recognition Attendance System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #20b2aa 0%, #008b8b 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .login-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 450px;
+            padding: 40px;
+        }
+        
+        .login-container h1 {
+            color: #333;
+            font-size: 2em;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+        
+        .form-group input[type="text"],
+        .form-group input[type="email"],
+        .form-group input[type="password"],
+        .form-group input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #20b2aa;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+        
+        .checkbox-group label {
+            color: #666;
+            font-weight: normal;
+            cursor: pointer;
+            margin: 0;
+        }
+        
+        .btn-signin {
+            width: 100%;
+            padding: 14px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-bottom: 20px;
+        }
+        
+        .btn-signin:hover {
+            background: #0056b3;
+        }
+        
+        .links {
+            text-align: center;
+            font-size: 0.9em;
+        }
+        
+        .links a {
+            color: #007bff;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 10px;
+        }
+        
+        .links a:hover {
+            text-decoration: underline;
+        }
+        
+        
+        .result-message {
+            padding: 12px;
+            border-radius: 5px;
+            margin-top: 15px;
+            display: none;
+            text-align: center;
+        }
+        
+        .result-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .result-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>Login</h1>
+        
+        <!-- Log In Form -->
+        <div id="loginForm">
+            <div class="form-group">
+                <label>Student ID:</label>
+                <input type="text" id="loginStudentId" placeholder="Enter Student ID" required>
+            </div>
+            <div class="form-group">
+                <label>Password:</label>
+                <input type="password" id="loginPassword" placeholder="Enter password" onkeypress="if(event.key==='Enter') logIn()">
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="showPassword" onchange="togglePassword()">
+                <label for="showPassword">Show Password</label>
+            </div>
+            <button class="btn-signin" onclick="logIn()">SIGN IN</button>
+            <div id="loginResult" class="result-message"></div>
+            <div class="links">
+                <a href="#" onclick="alert('Contact administrator to reset password'); return false;">Forgot Username / Password?</a>
+                <a href="signup.html">Don't have an account? Sign up</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('loginPassword');
+            const checkbox = document.getElementById('showPassword');
+            if (passwordInput) {
+                passwordInput.type = checkbox.checked ? 'text' : 'password';
+            }
+        }
+
+        async function logIn() {
+            const studentId = document.getElementById('loginStudentId').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const resultDiv = document.getElementById('loginResult');
+            
+            if (!studentId) {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result-message error';
+                resultDiv.textContent = 'Please enter your Student ID';
+                return;
+            }
+            
+            resultDiv.style.display = 'block';
+            resultDiv.className = 'result-message';
+            resultDiv.textContent = 'Logging in...';
+            
+            try {
+                const API_BASE_URL = 'https://pjjf6u13f8.execute-api.us-east-1.amazonaws.com/prod';
+                const response = await fetch(`${API_BASE_URL}/attendance?studentId=${studentId}`);
+                const data = await response.json();
+                
+                if (data.success || response.ok) {
+                    let studentName = studentId;
+                    if (data.records && data.records.length > 0) {
+                        studentName = data.records[0].studentName;
+                    }
+                    
+                    sessionStorage.setItem('userRole', 'student');
+                    sessionStorage.setItem('studentId', studentId);
+                    sessionStorage.setItem('userName', studentName);
+                    sessionStorage.setItem('isNewUser', 'false');
+                    
+                    resultDiv.className = 'result-message success';
+                    resultDiv.textContent = '✅ Login successful! Redirecting...';
+                    
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1000);
+                } else {
+                    resultDiv.className = 'result-message error';
+                    resultDiv.textContent = 'Student ID not found. Please sign up first.';
+                }
+            } catch (error) {
+                // Allow login even if API fails (student might exist)
+                sessionStorage.setItem('userRole', 'student');
+                sessionStorage.setItem('studentId', studentId);
+                sessionStorage.setItem('userName', studentId);
+                sessionStorage.setItem('isNewUser', 'false');
+                
+                resultDiv.className = 'result-message success';
+                resultDiv.textContent = '✅ Login successful! Redirecting...';
+                
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+            }
+        }
+
+        // Check if already logged in
+        if (sessionStorage.getItem('userRole')) {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

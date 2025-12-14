@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Recognition Attendance System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎓 Face Recognition Attendance System</h1>
+            <p>Automated attendance tracking using AWS Rekognition</p>
+            <div style="text-align: right; margin-top: 10px;">
+                <span id="userInfo" style="color: white; margin-right: 15px;"></span>
+                <button onclick="logout()" style="padding: 8px 15px; background: rgba(255,255,255,0.2); border: 1px solid white; border-radius: 5px; color: white; cursor: pointer;">Logout</button>
+            </div>
+        </header>
+
+        <nav class="tabs" id="navTabs">
+            <button class="tab-btn student-only" onclick="showTab('attendance', this)" style="display: none;">Mark My Attendance</button>
+            <button class="tab-btn student-only" onclick="showTab('dashboard', this)" style="display: none;">Attendance History</button>
+            <button class="tab-btn admin-only" onclick="showTab('register', this)" style="display: none;">Register Student</button>
+            <button class="tab-btn admin-only" onclick="showTab('attendance', this)" style="display: none;">Mark Attendance</button>
+            <button class="tab-btn admin-only" onclick="showTab('dashboard', this)" style="display: none;">View Attendance</button>
+        </nav>
+
+        <!-- Register Student Tab -->
+        <div id="register" class="tab-content">
+            <h2 id="registerTitle">Register New Student</h2>
+            <div class="form-group" id="studentIdGroup">
+                <label>Student ID:</label>
+                <input type="text" id="studentId" placeholder="Enter Student ID">
+            </div>
+            <div class="form-group" id="studentNameGroup">
+                <label>Student Name:</label>
+                <input type="text" id="studentName" placeholder="Enter Student Name">
+            </div>
+            <div class="form-group">
+                <label>Upload Photo:</label>
+                <input type="file" id="registerImage" accept="image/*" onchange="previewImage('registerImage', 'registerPreview')">
+                <div class="image-preview">
+                    <img id="registerPreview" src="" alt="Preview" style="display: none;">
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="registerFace()" id="registerButton">Register Student</button>
+            <div id="registerResult" class="result"></div>
+        </div>
+
+        <!-- Mark Attendance Tab -->
+        <div id="attendance" class="tab-content">
+            <h2 id="attendanceTitle">Mark Attendance</h2>
+            <div class="form-group admin-only" id="classIdGroup">
+                <label>Class ID:</label>
+                <input type="text" id="classId" placeholder="Enter Class ID" value="CS101">
+            </div>
+            <div class="form-group">
+                <label>Date:</label>
+                <input type="date" id="attendanceDate" value="">
+            </div>
+            <div class="form-group">
+                <label id="uploadLabel">Upload Attendance Photo:</label>
+                <input type="file" id="attendanceImage" accept="image/*" onchange="previewImage('attendanceImage', 'attendancePreview')">
+                <div class="image-preview">
+                    <img id="attendancePreview" src="" alt="Preview" style="display: none;">
+                </div>
+            </div>
+            <button class="btn btn-primary" onclick="processAttendance()" id="attendanceButton">Process Attendance</button>
+            <div id="attendanceResult" class="result"></div>
+            <div id="identifiedStudents" class="students-list"></div>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content">
+            <h2 id="dashboardTitle">Attendance Dashboard</h2>
+            <div class="filter-group">
+                <input type="date" id="filterDate" onchange="loadAttendance()">
+                <input type="text" id="filterStudentId" placeholder="Filter by Student ID" onkeyup="loadAttendance()" class="admin-only" style="display: none;">
+                <button class="btn btn-secondary" onclick="loadAttendance()">Refresh</button>
+            </div>
+            <div id="attendanceList" class="attendance-list"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
+
