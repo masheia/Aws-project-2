@@ -74,6 +74,8 @@ def lambda_handler(event, context):
                 student = student_response['Item']
                 student_id = student['StudentId']
                 student_name = student['Name']
+                student_email = student.get('Email')
+                enable_notifications = student.get('EnableNotifications', False)
                 
                 # Create attendance record
                 attendance_id = f"{student_id}_{date}_{timestamp}"
@@ -95,24 +97,52 @@ def lambda_handler(event, context):
                 identified_students.append({
                     'studentId': student_id,
                     'name': student_name,
-                    'confidence': confidence
+                    'confidence': confidence,
+                    'email': student_email if enable_notifications else None
                 })
                 attendance_records.append(attendance_record)
+                
+                # Send individual email notification to student if enabled
+                if student_email and enable_notifications:
+                    try:
+                        individual_message = f"""Hello {student_name},
+
+Your attendance has been recorded successfully!
+
+Details:
+- Date: {date}
+- Time: {datetime.now().strftime('%H:%M:%S')}
+- Confidence: {confidence:.2f}%
+- Class: {class_id}
+- Status: Present
+
+Thank you for using the Face Recognition Attendance System.
+
+Best regards,
+Face Recognition Attendance System
+"""
+                        sns_client.publish(
+                            TopicArn=SNS_TOPIC_ARN,
+                            Subject=f'Your Attendance Recorded - {date}',
+                            Message=individual_message
+                        )
+                    except ClientError as e:
+                        print(f"Error sending individual notification to {student_email}: {e}")
         
-        # Send notification if students identified
-        if identified_students:
-            message = f"Attendance recorded for {len(identified_students)} student(s) on {date}\n"
-            for student in identified_students:
-                message += f"- {student['name']} (Confidence: {student['confidence']:.2f}%)\n"
-            
+        # Send summary notification to admin/topic subscribers if multiple students identified
+        if len(identified_students) > 1:
             try:
+                summary_message = f"Attendance recorded for {len(identified_students)} student(s) on {date}\n\n"
+                for student in identified_students:
+                    summary_message += f"- {student['name']} (ID: {student['studentId']}, Confidence: {student['confidence']:.2f}%)\n"
+                
                 sns_client.publish(
                     TopicArn=SNS_TOPIC_ARN,
-                    Subject=f'Attendance Recorded - {date}',
-                    Message=message
+                    Subject=f'Attendance Summary - {date}',
+                    Message=summary_message
                 )
             except ClientError as e:
-                print(f"Error sending SNS notification: {e}")
+                print(f"Error sending summary notification: {e}")
         
         return {
             'statusCode': 200,
