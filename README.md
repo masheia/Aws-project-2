@@ -37,7 +37,7 @@
 
 ## 🎯 Overview
 
-The **Face Recognition Attendance System** is a fully serverless, cloud-based solution that automates student attendance tracking using Amazon Rekognition's facial recognition technology. Instead of manual roll calls, teachers simply upload a photo of the class, and the system automatically identifies registered students and records their attendance in real-time.
+The **Face Recognition Attendance System** is a fully serverless, cloud-based solution that automates student attendance tracking using Amazon Rekognition's facial recognition technology. Students can mark their own attendance by uploading a selfie, and the system automatically identifies them and records their attendance in real-time. Admins can also upload class photos to mark attendance for multiple students at once.
 
 ### Problem Statement
 
@@ -71,10 +71,10 @@ Traditional attendance systems face several challenges:
 - Support for multiple faces per student (optional)
 
 ### 📸 Attendance Marking
-- Upload class photos to mark attendance
+- **Student Self-Attendance**: Students upload their own photo/selfie to mark attendance
+- **Admin Batch Attendance**: Admins can upload class photos to mark multiple students at once
 - Automatic face recognition and identification
 - Real-time processing with confidence scores
-- Support for multiple students in a single photo
 - Automatic timestamp and date recording
 
 ### 📊 Attendance Dashboard
@@ -389,21 +389,22 @@ For detailed step-by-step instructions, see:
    - Use admin credentials
    - Access full dashboard
 
-2. **Register Students**
+2. **Register Students** (Optional - students can also self-register)
    - Go to "Register Student" tab
    - Enter Student ID and Name
    - Upload student photo
    - Click "Register Student"
 
-3. **Mark Attendance**
+3. **Mark Attendance (Batch)**
    - Go to "Mark Attendance" tab
-   - Upload class photo
-   - System automatically identifies all registered students
+   - Enter Class ID
+   - Upload class photo with multiple students
+   - System automatically identifies all registered students in the photo
    - Click "Process Attendance"
 
 4. **View All Attendance**
    - Go to "View Attendance" tab
-   - View all attendance records
+   - View all attendance records from all students
    - Filter by date, student ID, or class
    - Export data if needed
 
