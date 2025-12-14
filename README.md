@@ -37,7 +37,7 @@
 
 ## 🎯 Overview
 
-The **Face Recognition Attendance System** is a fully serverless, cloud-based solution that automates student attendance tracking using Amazon Rekognition's facial recognition technology. Students can mark their own attendance by uploading a selfie, and the system automatically identifies them and records their attendance in real-time. Admins can also upload class photos to mark attendance for multiple students at once.
+The **Face Recognition Attendance System** is a fully serverless, cloud-based solution that automates student attendance tracking using Amazon Rekognition's facial recognition technology. Students can mark their own attendance by uploading a photo through the web interface, and the system automatically identifies them and records their attendance in real-time. Administrators manage the system through AWS Console (DynamoDB, CloudWatch, IAM) for secure, direct data control and system monitoring.
 
 ### Problem Statement
 
@@ -61,8 +61,9 @@ Traditional attendance systems face several challenges:
 
 ### 🔐 User Authentication
 - **Student Profile**: Sign up with student ID, name, and face photo
-- **Admin Profile**: Full access to all attendance records and management
-- **Session Management**: Secure login/logout with role-based access
+- **Student Login**: Secure login to mark attendance and view records
+- **Admin Access**: Admins manage the system through AWS Console (DynamoDB, CloudWatch, IAM)
+- **Session Management**: Secure login/logout for students
 
 ### 👤 Face Registration
 - Upload student photos with their information
@@ -70,19 +71,33 @@ Traditional attendance systems face several challenges:
 - Face data stored securely in Rekognition Face Collection
 - Support for multiple faces per student (optional)
 
-### 📸 Attendance Marking
-- **Student Self-Attendance**: Students upload their own photo/selfie to mark attendance
-- **Admin Batch Attendance**: Admins can upload class photos to mark multiple students at once
-- Automatic face recognition and identification
+### 📸 Attendance Marking (Student Web Interface)
+- **Student Self-Attendance**: Students upload their own photo to mark attendance
+- Automatic face recognition and verification
 - Real-time processing with confidence scores
 - Automatic timestamp and date recording
+- Secure verification ensures only registered students can mark attendance
 
-### 📊 Attendance Dashboard
-- View all attendance records
-- Filter by date, student ID, or class
+### 🔧 Administrative Management (AWS Console)
+- **Direct Database Access**: Admins manage all data through DynamoDB Console
+- **System Monitoring**: CloudWatch logs for troubleshooting and monitoring
+- **Face Management**: Re-register faces, manage Rekognition collections
+- **Data Management**: Add/remove students, fix attendance records, bulk operations
+- **IAM Security**: Role-based access control for admin operations
+
+### 📊 Attendance Dashboard (Students)
+- View your own attendance records
+- Filter by date
 - View confidence scores for each recognition
-- Export attendance data
-- Admin view shows all students, Student view shows only their records
+- See attendance history and timestamps
+
+### 🔧 Admin Management (AWS Console)
+- **DynamoDB Console**: Direct access to all attendance records and student data
+- **CloudWatch Logs**: Monitor system activity and troubleshoot issues
+- **IAM Access**: Secure role-based access control
+- **Lambda Functions**: Direct management and monitoring
+- **S3 Bucket**: Manage uploaded images and face photos
+- **Direct Data Management**: Add/remove students, fix incorrect attendance, re-register faces
 
 ### 🔔 Notifications
 - Email/SMS notifications when attendance is recorded
@@ -362,7 +377,7 @@ For detailed step-by-step instructions, see:
 
 ## 📖 Usage
 
-### For Students
+### For Students (Web Interface)
 
 1. **Sign Up**
    - Go to the Sign Up page
@@ -374,39 +389,81 @@ For detailed step-by-step instructions, see:
 2. **Mark Attendance**
    - Log in with your Student ID and password
    - Go to "Mark My Attendance" tab
-   - Upload a photo (or take a selfie)
-   - Click "Mark Attendance"
-   - Your attendance will be recorded automatically
+   - Select the date
+   - Upload your photo (file upload)
+   - Click "Process Attendance"
+   - System verifies your face and records your attendance automatically
 
 3. **View Attendance History**
    - Go to "Attendance History" tab
    - View all your attendance records
    - Filter by date if needed
+   - See confidence scores and timestamps
 
-### For Administrators
+### For Administrators (AWS Console)
 
-1. **Log In**
-   - Use admin credentials
-   - Access full dashboard
+Admins manage the system through AWS Console for better security and direct data control.
 
-2. **Register Students** (Optional - students can also self-register)
-   - Go to "Register Student" tab
-   - Enter Student ID and Name
-   - Upload student photo
-   - Click "Register Student"
+#### Accessing AWS Console
 
-3. **Mark Attendance (Batch)**
-   - Go to "Mark Attendance" tab
-   - Enter Class ID
-   - Upload class photo with multiple students
-   - System automatically identifies all registered students in the photo
-   - Click "Process Attendance"
+1. **Log in to AWS Console**
+   - Go to: https://console.aws.amazon.com/
+   - Use admin IAM credentials
 
-4. **View All Attendance**
-   - Go to "View Attendance" tab
-   - View all attendance records from all students
-   - Filter by date, student ID, or class
-   - Export data if needed
+2. **Manage Students (DynamoDB)**
+   - Navigate to: **DynamoDB Console** → Tables → `Students`
+   - **View all students**: Browse all registered student records
+   - **Add student**: Insert new student record with FaceId, StudentId, StudentName
+   - **Remove student**: Delete student records
+   - **Update student**: Modify student information
+
+3. **Manage Attendance Records (DynamoDB)**
+   - Navigate to: **DynamoDB Console** → Tables → `AttendanceRecords`
+   - **View all attendance**: See all attendance records across all students
+   - **Filter records**: Use DynamoDB query/scan with filters
+   - **Fix incorrect attendance**: Delete or modify incorrect records
+   - **Export data**: Use DynamoDB export feature or query via AWS CLI
+
+4. **Monitor System (CloudWatch)**
+   - Navigate to: **CloudWatch** → Logs → Log groups
+   - **View Lambda logs**: Monitor `ProcessAttendance`, `RegisterFace`, `GetAttendance` logs
+   - **Troubleshoot issues**: Check error logs and debug problems
+   - **Monitor performance**: Track execution times and success rates
+
+5. **Manage Face Recognition (Rekognition)**
+   - Navigate to: **Amazon Rekognition Console** → Face collections
+   - **View face collection**: Check `attendance-students` collection
+   - **Re-register faces**: Remove and re-index faces if needed
+   - **Verify face indexing**: Ensure faces are properly indexed
+
+6. **Manage Images (S3)**
+   - Navigate to: **S3 Console** → `attendance-images-1765405751`
+   - **View uploaded photos**: Browse student photos and attendance photos
+   - **Delete images**: Remove old or incorrect images
+   - **Organize folders**: Manage folder structure
+
+7. **Manage Lambda Functions**
+   - Navigate to: **Lambda Console**
+   - **Update functions**: Modify code or configuration
+   - **View metrics**: Monitor invocation counts, errors, duration
+   - **Test functions**: Manually trigger functions for testing
+
+#### Common Admin Tasks
+
+- **Add Student Manually**: Insert record in DynamoDB `Students` table
+- **Fix Attendance Error**: Delete incorrect record from `AttendanceRecords` table
+- **Re-register Face**: Delete face from Rekognition collection, re-upload via web interface
+- **Review Logs**: Check CloudWatch logs for system issues
+- **Monitor Usage**: Track AWS service usage in Cost Explorer
+
+#### Benefits of Console-Based Admin Access
+
+- ✅ **Better Security**: IAM role-based access control
+- ✅ **Direct Data Control**: Full access to all data without UI limitations
+- ✅ **Audit Trail**: All changes logged in CloudWatch
+- ✅ **Bulk Operations**: Query and modify multiple records at once
+- ✅ **System Monitoring**: Real-time monitoring of all AWS services
+- ✅ **Troubleshooting**: Direct access to logs and error details
 
 ---
 
