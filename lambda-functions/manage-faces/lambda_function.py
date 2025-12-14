@@ -9,6 +9,10 @@ from botocore.exceptions import ClientError
 s3_client = boto3.client('s3')
 rekognition = boto3.client('rekognition')
 dynamodb = boto3.resource('dynamodb')
+sns_client = boto3.client('sns')
+
+# Constants
+SNS_TOPIC_ARN = 'arn:aws:sns:us-east-1:846863292978:attendance-notifications'
 
 # Constants
 FACE_COLLECTION_ID = 'attendance-students'
@@ -25,6 +29,8 @@ def lambda_handler(event, context):
         
         student_id = body.get('studentId')
         student_name = body.get('name')
+        email = body.get('email')  # Optional for backwards compatibility
+        enable_notifications = body.get('enableNotifications', True)  # Default to True
         image_data = body.get('image')
         
         if not all([student_id, student_name, image_data]):
@@ -111,7 +117,53 @@ def lambda_handler(event, context):
             }
         }
         
+        # Add email and notification preferences if provided
+        if email:
+            student_record['Email'] = email
+            student_record['EnableNotifications'] = enable_notifications
+        
         students_table.put_item(Item=student_record)
+        
+        # Send welcome email notification if email provided and notifications enabled
+        if email and enable_notifications:
+            try:
+                # Subscribe email to SNS topic (if not already subscribed)
+                try:
+                    sns_client.subscribe(
+                        TopicArn=SNS_TOPIC_ARN,
+                        Protocol='email',
+                        Endpoint=email
+                    )
+                except ClientError as e:
+                    # Already subscribed or other error - continue anyway
+                    print(f"Subscription note: {e}")
+                
+                # Send welcome notification
+                welcome_message = f"""Hello {student_name},
+
+Welcome to the Face Recognition Attendance System!
+
+Your account has been successfully created:
+- Student ID: {student_id}
+- Name: {student_name}
+- Email: {email}
+
+Your face has been registered and you can now mark your attendance using the system.
+
+You will receive email notifications when your attendance is recorded.
+
+Best regards,
+Face Recognition Attendance System
+"""
+                
+                sns_client.publish(
+                    TopicArn=SNS_TOPIC_ARN,
+                    Subject='Welcome to Face Recognition Attendance System',
+                    Message=welcome_message
+                )
+            except ClientError as e:
+                print(f"Error sending welcome notification: {e}")
+                # Don't fail the registration if notification fails
         
         return {
             'statusCode': 200,

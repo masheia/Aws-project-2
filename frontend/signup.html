@@ -190,6 +190,12 @@
             </div>
             
             <div class="form-group">
+                <label>Email:</label>
+                <input type="email" id="signupEmail" placeholder="Enter your email (optional)" required>
+                <div class="upload-hint">We'll send you notifications when your attendance is recorded</div>
+            </div>
+            
+            <div class="form-group">
                 <label>Password:</label>
                 <input type="password" id="signupPassword" placeholder="Enter password" required>
             </div>
@@ -197,6 +203,11 @@
             <div class="checkbox-group">
                 <input type="checkbox" id="showPasswordSignup" onchange="togglePasswordSignup()">
                 <label for="showPasswordSignup">Show Password</label>
+            </div>
+            
+            <div class="checkbox-group">
+                <input type="checkbox" id="enableNotifications" checked>
+                <label for="enableNotifications">Send me email notifications when attendance is recorded</label>
             </div>
             
             <div class="form-group">
@@ -253,14 +264,25 @@
         async function signUp() {
             const studentId = document.getElementById('signupStudentId').value.trim();
             const studentName = document.getElementById('signupStudentName').value.trim();
+            const email = document.getElementById('signupEmail').value.trim();
             const password = document.getElementById('signupPassword').value;
+            const enableNotifications = document.getElementById('enableNotifications').checked;
             const imageFile = document.getElementById('signupImage').files[0];
             const resultDiv = document.getElementById('signupResult');
             
-            if (!studentId || !studentName || !password || !imageFile) {
+            if (!studentId || !studentName || !email || !password || !imageFile) {
                 resultDiv.style.display = 'block';
                 resultDiv.className = 'result-message error';
                 resultDiv.textContent = 'Please fill all fields and upload your face photo';
+                return;
+            }
+            
+            // Basic email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                resultDiv.style.display = 'block';
+                resultDiv.className = 'result-message error';
+                resultDiv.textContent = 'Please enter a valid email address';
                 return;
             }
             
@@ -288,6 +310,8 @@
                     body: JSON.stringify({
                         studentId: studentId,
                         name: studentName,
+                        email: email,
+                        enableNotifications: enableNotifications,
                         image: imageBase64
                     })
                 });
@@ -299,6 +323,7 @@
                     sessionStorage.setItem('userRole', 'student');
                     sessionStorage.setItem('studentId', studentId);
                     sessionStorage.setItem('userName', studentName);
+                    sessionStorage.setItem('userEmail', email);
                     sessionStorage.setItem('userPassword', password); // Store for demo (in production, use proper auth)
                     sessionStorage.setItem('isNewUser', 'true');
                     
