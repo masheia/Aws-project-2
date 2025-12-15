@@ -212,21 +212,10 @@ async function registerFace() {
     }
     
     resultDiv.className = 'result';
-    resultDiv.textContent = 'Getting your location...';
+    resultDiv.textContent = 'Registering student...';
     resultDiv.style.display = 'block';
     
     try {
-        // Get user's location for geofencing
-        let location = null;
-        try {
-            location = await getCurrentLocation();
-            resultDiv.textContent = 'Location verified. Registering student...';
-        } catch (locationError) {
-            resultDiv.className = 'result error';
-            resultDiv.textContent = 'Location access required for security. Please allow location access and try again.';
-            return;
-        }
-        
         const imageBase64 = await getBase64(imageFile);
         
         const response = await fetch(`${API_BASE_URL}/register-face`, {
@@ -237,9 +226,7 @@ async function registerFace() {
             body: JSON.stringify({
                 studentId: regStudentId,
                 name: regStudentName,
-                image: imageBase64,
-                latitude: location.latitude,
-                longitude: location.longitude
+                image: imageBase64
             })
         });
         
@@ -298,22 +285,11 @@ async function processAttendance() {
     }
     
     resultDiv.className = 'result';
-    resultDiv.textContent = 'Getting your location...';
+    resultDiv.textContent = 'Processing attendance...';
     resultDiv.style.display = 'block';
     if (studentsDiv) studentsDiv.innerHTML = '';
     
     try {
-        // Get user's location for geofencing
-        let location = null;
-        try {
-            location = await getCurrentLocation();
-            resultDiv.textContent = 'Location verified. Processing attendance...';
-        } catch (locationError) {
-            resultDiv.className = 'result error';
-            resultDiv.textContent = 'Location access required for security. Please allow location access and try again.';
-            return;
-        }
-        
         const imageBase64 = await getBase64(imageFile);
         
         const response = await fetch(`${API_BASE_URL}/upload`, {
@@ -324,9 +300,7 @@ async function processAttendance() {
             body: JSON.stringify({
                 image: imageBase64,
                 classId: classId,
-                date: date,
-                latitude: location.latitude,
-                longitude: location.longitude
+                date: date
             })
         });
         
