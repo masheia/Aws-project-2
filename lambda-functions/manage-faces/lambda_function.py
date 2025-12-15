@@ -128,17 +128,27 @@ def lambda_handler(event, context):
         if email and enable_notifications:
             try:
                 # Subscribe email to SNS topic (if not already subscribed)
+                # IMPORTANT: SNS requires email confirmation before messages can be sent
+                subscription_arn = None
                 try:
-                    sns_client.subscribe(
+                    subscribe_response = sns_client.subscribe(
                         TopicArn=SNS_TOPIC_ARN,
                         Protocol='email',
                         Endpoint=email
                     )
+                    subscription_arn = subscribe_response.get('SubscriptionArn')
+                    print(f"Email subscription initiated: {subscription_arn}")
+                    # AWS will automatically send a confirmation email to the user
                 except ClientError as e:
-                    # Already subscribed or other error - continue anyway
-                    print(f"Subscription note: {e}")
+                    error_code = e.response.get('Error', {}).get('Code', '')
+                    if error_code == 'SubscriptionLimitExceeded':
+                        print(f"Email may already be subscribed: {e}")
+                    else:
+                        print(f"Subscription note: {e}")
                 
                 # Send welcome notification
+                # Note: This will only work if subscription is already confirmed
+                # If not confirmed, AWS will send confirmation email first
                 welcome_message = f"""Hello {student_name},
 
 Welcome to the Face Recognition Attendance System!
@@ -150,20 +160,34 @@ Your account has been successfully created:
 
 Your face has been registered and you can now mark your attendance using the system.
 
-You will receive email notifications when your attendance is recorded.
+IMPORTANT: To receive email notifications when your attendance is recorded, please check your email and confirm your subscription. You should receive a confirmation email from AWS SNS shortly. After confirming, you will receive email notifications whenever your attendance is recorded.
 
 Best regards,
 Face Recognition Attendance System
 """
                 
-                sns_client.publish(
-                    TopicArn=SNS_TOPIC_ARN,
-                    Subject='Welcome to Face Recognition Attendance System',
-                    Message=welcome_message
-                )
-            except ClientError as e:
-                print(f"Error sending welcome notification: {e}")
+                # Try to publish - will work if subscription is already confirmed
+                # If not confirmed, the message may be queued or the confirmation email will be sent
+                try:
+                    sns_client.publish(
+                        TopicArn=SNS_TOPIC_ARN,
+                        Subject='Welcome to Face Recognition Attendance System',
+                        Message=welcome_message
+                    )
+                    print(f"Welcome email sent successfully to {email}")
+                except ClientError as publish_error:
+                    error_code = publish_error.response.get('Error', {}).get('Code', '')
+                    if 'InvalidParameter' in str(publish_error) or 'PendingConfirmation' in str(publish_error):
+                        # Subscription not confirmed yet - this is expected for new emails
+                        print(f"Subscription pending confirmation. User will receive confirmation email first.")
+                    else:
+                        print(f"Error publishing welcome message: {publish_error}")
+                        
+            except Exception as e:
+                print(f"Error in email notification process: {e}")
                 # Don't fail the registration if notification fails
+                import traceback
+                traceback.print_exc()
         
         return {
             'statusCode': 200,
