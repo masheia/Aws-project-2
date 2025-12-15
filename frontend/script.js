@@ -182,36 +182,6 @@ function getBase64(file) {
     });
 }
 
-// Get user's current location for geofencing
-async function getCurrentLocation() {
-    return new Promise((resolve, reject) => {
-        if (!navigator.geolocation) {
-            reject(new Error('Geolocation is not supported by your browser'));
-            return;
-        }
-        
-        const options = {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 0
-        };
-        
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                resolve({
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude,
-                    accuracy: position.coords.accuracy
-                });
-            },
-            (error) => {
-                reject(error);
-            },
-            options
-        );
-    });
-}
-
 // Register face
 async function registerFace() {
     const studentIdInput = document.getElementById('studentId');
@@ -292,14 +262,7 @@ async function registerFace() {
             }
         } else {
             resultDiv.className = 'result error';
-            if (data.locationRejected) {
-                resultDiv.textContent = `❌ ${data.error}`;
-                if (data.distance) {
-                    resultDiv.textContent += ` (You are ${Math.round(data.distance)}m away)`;
-                }
-            } else {
-                resultDiv.textContent = data.error || 'Registration failed';
-            }
+            resultDiv.textContent = data.error || 'Registration failed';
         }
     } catch (error) {
         resultDiv.className = 'result error';
