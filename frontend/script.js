@@ -182,6 +182,36 @@ function getBase64(file) {
     });
 }
 
+// Get user's current location for geofencing
+async function getCurrentLocation() {
+    return new Promise((resolve, reject) => {
+        if (!navigator.geolocation) {
+            reject(new Error('Geolocation is not supported by your browser'));
+            return;
+        }
+        
+        const options = {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+        };
+        
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                resolve({
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                    accuracy: position.coords.accuracy
+                });
+            },
+            (error) => {
+                reject(error);
+            },
+            options
+        );
+    });
+}
+
 // Register face
 async function registerFace() {
     const studentIdInput = document.getElementById('studentId');
@@ -212,10 +242,21 @@ async function registerFace() {
     }
     
     resultDiv.className = 'result';
-    resultDiv.textContent = 'Registering student...';
+    resultDiv.textContent = 'Getting your location...';
     resultDiv.style.display = 'block';
     
     try {
+        // Get user's location for geofencing
+        let location = null;
+        try {
+            location = await getCurrentLocation();
+            resultDiv.textContent = 'Location verified. Registering student...';
+        } catch (locationError) {
+            resultDiv.className = 'result error';
+            resultDiv.textContent = 'Location access required for security. Please allow location access and try again.';
+            return;
+        }
+        
         const imageBase64 = await getBase64(imageFile);
         
         const response = await fetch(`${API_BASE_URL}/register-face`, {
@@ -226,7 +267,9 @@ async function registerFace() {
             body: JSON.stringify({
                 studentId: regStudentId,
                 name: regStudentName,
-                image: imageBase64
+                image: imageBase64,
+                latitude: location.latitude,
+                longitude: location.longitude
             })
         });
         
@@ -249,7 +292,14 @@ async function registerFace() {
             }
         } else {
             resultDiv.className = 'result error';
-            resultDiv.textContent = data.error || 'Registration failed';
+            if (data.locationRejected) {
+                resultDiv.textContent = `❌ ${data.error}`;
+                if (data.distance) {
+                    resultDiv.textContent += ` (You are ${Math.round(data.distance)}m away)`;
+                }
+            } else {
+                resultDiv.textContent = data.error || 'Registration failed';
+            }
         }
     } catch (error) {
         resultDiv.className = 'result error';
@@ -285,11 +335,22 @@ async function processAttendance() {
     }
     
     resultDiv.className = 'result';
-    resultDiv.textContent = 'Processing attendance...';
+    resultDiv.textContent = 'Getting your location...';
     resultDiv.style.display = 'block';
     if (studentsDiv) studentsDiv.innerHTML = '';
     
     try {
+        // Get user's location for geofencing
+        let location = null;
+        try {
+            location = await getCurrentLocation();
+            resultDiv.textContent = 'Location verified. Processing attendance...';
+        } catch (locationError) {
+            resultDiv.className = 'result error';
+            resultDiv.textContent = 'Location access required for security. Please allow location access and try again.';
+            return;
+        }
+        
         const imageBase64 = await getBase64(imageFile);
         
         const response = await fetch(`${API_BASE_URL}/upload`, {
@@ -300,7 +361,9 @@ async function processAttendance() {
             body: JSON.stringify({
                 image: imageBase64,
                 classId: classId,
-                date: date
+                date: date,
+                latitude: location.latitude,
+                longitude: location.longitude
             })
         });
         

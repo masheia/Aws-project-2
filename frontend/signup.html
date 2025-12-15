@@ -312,9 +312,34 @@
             
             resultDiv.style.display = 'block';
             resultDiv.className = 'result-message info';
-            resultDiv.textContent = 'Creating account and uploading face...';
+            resultDiv.textContent = 'Getting your location for security...';
             
             try {
+                // Get user's location for geofencing
+                let location = null;
+                try {
+                    if (navigator.geolocation) {
+                        const position = await new Promise((resolve, reject) => {
+                            navigator.geolocation.getCurrentPosition(resolve, reject, {
+                                enableHighAccuracy: true,
+                                timeout: 10000,
+                                maximumAge: 0
+                            });
+                        });
+                        location = {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude
+                        };
+                        resultDiv.textContent = 'Location verified. Creating account...';
+                    } else {
+                        throw new Error('Geolocation not supported');
+                    }
+                } catch (locationError) {
+                    resultDiv.className = 'result-message error';
+                    resultDiv.textContent = 'Location access required for security. Please allow location access in your browser settings and try again.';
+                    return;
+                }
+                
                 const imageBase64 = await getBase64(imageFile);
                 const API_BASE_URL = 'https://pjjf6u13f8.execute-api.us-east-1.amazonaws.com/prod';
                 
@@ -329,7 +354,9 @@
                         name: studentName,
                         email: email,
                         enableNotifications: enableNotifications,
-                        image: imageBase64
+                        image: imageBase64,
+                        latitude: location.latitude,
+                        longitude: location.longitude
                     })
                 });
                 
@@ -353,7 +380,14 @@
                     }, 2000);
                 } else {
                     resultDiv.className = 'result-message error';
-                    resultDiv.textContent = 'Error: ' + (data.error || 'Registration failed. Please try again.');
+                    if (data.locationRejected) {
+                        resultDiv.textContent = `❌ ${data.error}`;
+                        if (data.distance) {
+                            resultDiv.textContent += ` (You are ${Math.round(data.distance)}m away from school)`;
+                        }
+                    } else {
+                        resultDiv.textContent = 'Error: ' + (data.error || 'Registration failed. Please try again.');
+                    }
                 }
             } catch (error) {
                 resultDiv.className = 'result-message error';

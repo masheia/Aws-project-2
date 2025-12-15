@@ -1,6 +1,7 @@
 import json
 import boto3
 import urllib.parse
+import math
 from datetime import datetime
 from decimal import Decimal
 from botocore.exceptions import ClientError
@@ -18,6 +19,64 @@ STUDENTS_TABLE = 'Students'
 SNS_TOPIC_ARN = 'arn:aws:sns:us-east-1:846863292978:attendance-notifications'
 S3_BUCKET = 'attendance-images-1765405751'
 
+# Geofencing Configuration - UPDATE THESE WITH YOUR SCHOOL COORDINATES
+SCHOOL_LATITUDE = 40.7128   # TODO: Update with your school's latitude
+SCHOOL_LONGITUDE = -74.0060  # TODO: Update with your school's longitude
+ALLOWED_RADIUS_METERS = 500  # Allowed radius in meters (500m = ~0.3 miles)
+REQUIRE_LOCATION = True      # Set to False to allow uploads without location (less secure)
+
+def calculate_distance(lat1, lon1, lat2, lon2):
+    """
+    Calculate distance between two coordinates using Haversine formula
+    Returns distance in meters
+    """
+    # Earth's radius in meters
+    R = 6371000
+    
+    # Convert to radians
+    phi1 = math.radians(lat1)
+    phi2 = math.radians(lat2)
+    delta_phi = math.radians(lat2 - lat1)
+    delta_lambda = math.radians(lon2 - lon1)
+    
+    # Haversine formula
+    a = math.sin(delta_phi / 2) ** 2 + \
+        math.cos(phi1) * math.cos(phi2) * math.sin(delta_lambda / 2) ** 2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+    
+    distance = R * c
+    return distance
+
+def validate_location(latitude, longitude):
+    """
+    Validate if coordinates are within school area
+    Returns (is_valid, distance_meters, message)
+    """
+    if latitude is None or longitude is None:
+        if REQUIRE_LOCATION:
+            return False, None, "Location is required for security. Please enable location services."
+        else:
+            return True, None, "Location not provided, allowing upload (flexible mode)"
+    
+    try:
+        lat = float(latitude)
+        lon = float(longitude)
+        
+        # Validate coordinate ranges
+        if not (-90 <= lat <= 90) or not (-180 <= lon <= 180):
+            return False, None, "Invalid coordinates provided"
+        
+        # Calculate distance from school
+        distance = calculate_distance(SCHOOL_LATITUDE, SCHOOL_LONGITUDE, lat, lon)
+        
+        if distance <= ALLOWED_RADIUS_METERS:
+            return True, distance, f"Location verified (within {int(distance)}m of school)"
+        else:
+            return False, distance, f"Upload rejected: You are {int(distance)}m away from school (allowed: {ALLOWED_RADIUS_METERS}m). Please be within the school area to upload images."
+            
+    except (ValueError, TypeError) as e:
+        return False, None, f"Invalid location data: {str(e)}"
+
 def lambda_handler(event, context):
     """
     Process attendance image upload and identify students
@@ -30,6 +89,27 @@ def lambda_handler(event, context):
         image_data = body.get('image')
         class_id = body.get('classId', 'default-class')
         date = body.get('date', datetime.now().strftime('%Y-%m-%d'))
+        
+        # Get location data for geofencing
+        latitude = body.get('latitude')
+        longitude = body.get('longitude')
+        
+        # Validate location (geofencing) before processing
+        is_valid_location, distance, location_message = validate_location(latitude, longitude)
+        if not is_valid_location:
+            return {
+                'statusCode': 403,
+                'headers': {
+                    'Access-Control-Allow-Origin': '*',
+                    'Content-Type': 'application/json'
+                },
+                'body': json.dumps({
+                    'success': False,
+                    'error': location_message,
+                    'locationRejected': True,
+                    'distance': distance
+                })
+            }
         
         # Decode base64 image
         import base64
